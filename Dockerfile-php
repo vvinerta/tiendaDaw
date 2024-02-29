@@ -1,0 +1,21 @@
+FROM php:fpm-buster
+
+RUN apt-get update && apt-get install -y
+
+RUN apt-get update && apt-get install -y \
+        git \
+        zlib1g-dev \
+        libxml2-dev \
+        libzip-dev \
+    && docker-php-ext-install \
+        zip \
+        intl \
+		mysqli \
+        pdo pdo_mysql
+    
+RUN curl -sS https://getcomposer.org/installer | php && mv composer.phar /usr/local/bin/composer
+COPY TiendaBack/ /var/www/TiendaBack
+WORKDIR /var/www/TiendaBack/
+RUN  curl -sS https://get.symfony.com/cli/installer | bash
+RUN  mv /root/.symfony5/bin/symfony /usr/local/bin/symfony
+RUN chmod -R 777 /var/www/TiendaBack

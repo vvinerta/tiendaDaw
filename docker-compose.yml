@@ -1,0 +1,59 @@
+version: '3'
+
+services:
+  basedatos:
+    container_name: "basedatos"
+    image: mariadb:10.6.16
+    ports:
+      - 3306
+    environment:
+      MYSQL_DATABASE: bdd_tienda_daw
+      MYSQL_ROOT_PASSWORD: "root"
+    volumes:
+      - ./mysql/bdd_tienda_daw.sql:/docker-entrypoint-initdb.d/bdd_tienda_daw.sql
+    networks:
+      - symfony
+
+  phpmyadmin:
+    container_name: "phpmyadmin"
+    image: phpmyadmin/phpmyadmin:latest
+    ports:
+      - "90:80"
+    links:
+      - basedatos:basedatos
+    environment:
+      PMA_ARBITRARY: 1
+    depends_on:
+      - basedatos
+    networks:
+      - symfony
+
+  php:
+    build:
+      context: .
+      dockerfile: Dockerfile-php
+    environment:
+      APP_ENV: dev
+    volumes:
+      - ./TiendaBack/:/var/www/TiendaBack/
+    networks:
+      - symfony
+    depends_on:
+      - basedatos
+    ports:
+      - 8000:8000
+    command: symfony serve
+
+  angular:
+    build:
+      context: .
+      dockerfile: Dockerfile-node
+    volumes:
+      - ./frontTienda/:/var/www/frontTienda/
+    ports:
+      - 4200:4200
+    command: >
+      bash -c "npm install && ng serve --host 0.0.0.0 --disable-host-check"
+
+networks:
+  symfony:
